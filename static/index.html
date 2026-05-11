@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Posture Monitor</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: sans-serif;
+      color: white;
+    }
+    #status {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    #confidence {
+      font-size: 1rem;
+      color: #aaa;
+      margin-bottom: 1rem;
+    }
+    video, canvas {
+      border-radius: 12px;
+      max-width: 640px;
+      width: 100%;
+    }
+    canvas { display: none; }
+  </style>
+</head>
+<body>
+    <div id = "status">Starting...</div>
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id = "canvas"></canvas>
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const status = document.getElementById('status');
+        const ctx = canvas.getContext('2d');
+
+        navigator.mediaDevices.getUserMedia({video:true}).then(Stream =>{
+            video.srcObject = Stream;
+            video.onloadedmetadata = () => {
+                canvas.widht = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                setInterval(sendFrame,500)
+
+            };
+        })
+        .catch(err =>{
+            statusEl.textContext = "Camera Error: " + err.message;
+        });
+
+        async function SendFrame() {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(async (blob) => {
+            const formData = new formData();
+            formData.append('file',blob, 'frame.jpg')
+            try {
+              const response = await fetch('/predict', {
+                method : 'POST',
+                body: formData
+              });
+              const data = await response.json();
+
+              if(data.status == 'Good'){
+                statusEl.textContext = 'Good Posture';
+                statusEl.style.color = '#00e676';
+              } else if(data.status == 'Bad'){
+                statusEl.textContext = 'Fix your posture';
+                statusEl.style.color = '#ff1744';
+              }else{
+                statusEl.textContext = 'No person on the screen';
+                statusEl.style.color = '#aaa';
+              }
+              confEl.textContent = `Confidence: ${(data.confidence * 100).toFixed(0)}%`;
+            }catch(err){
+              statusE1.textContent = 'Server error';
+            }
+          },'image/jpeg',0.8)
+        }
+    </script>
+</body>

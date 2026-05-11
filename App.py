@@ -8,6 +8,9 @@ import os
 import urllib.request
 from Alert import Posture_Alert
 import time
+from fastapi import FastAPI, File, UploadFile
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 
 MODEL_PATH = "pose_landmarker_full.task"
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task"
@@ -19,60 +22,47 @@ if not os.path.exists(MODEL_PATH):
 
 posture_model = tf.keras.models.load_model("posture_lm.h5")
 
+LANDMARK_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
 GOOD_CLASS_INDEX = 0
-
-latest_result = None
-
-def result_callback(result, output_image, timestamp_ms):
-    global latest_result
-    latest_result = result
 
 options = PoseLandmarkerOptions(
     base_options = python.BaseOptions(model_asset_path = MODEL_PATH),
-    running_mode = RunningMode.LIVE_STREAM,
-    result_callback = result_callback
+    running_mode = RunningMode.IMAGE,
 )
 
-cam = cv2.VideoCapture(0)
-alert = Posture_Alert(frequency=1000,duration=400)
+landmarker = PoseLandmarker.create_from_options(options)
 
-with PoseLandmarker.create_from_options(options) as landmarker:
-    while cam.isOpened():
-        ret,frame = cam.read()
-        if not ret:
-            break
+app = FastAPI()
 
-        timestamp = int(cam.get(cv2.CAP_PROP_POS_MSEC))
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format = mp.ImageFormat.SRGB, data = rgb)
-        landmarker.detect_async(mp_image,timestamp)
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    contents = await file.read()
+    image = Image.open(io.BytesIO(contents)).convert("RGB")
+    frame = np.array(image)
 
-        if latest_result and latest_result.pose_landmarks:
-            lm = latest_result.pose_landmarks[0]
-            LANDMARK_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-            row = []
-            for i in LANDMARK_INDICES:
-                p = lm[i]
-                row += [p.x,p.y,p.z]
+    mp_image = mp.Image(image_format = mp.ImageFormat.SRGB, data = frame)
+    result = landmarker.detect(mp_image)
 
-            input_vec = np.array(row, dtype=np.float32).reshape(1,39)
-            prediction = posture_model.predict(input_vec, verbose = 0)[0][0]
+    if not result.pose_landmarker:
+        return JSONResponse({"Status":"No person Found"})
+    
+    lm = result.pose_landmarker[0]
 
-            good_confidence = prediction if GOOD_CLASS_INDEX == 1 else 1 - prediction
-            good_posture = good_confidence > 0.65
-            alert.update(good_posture)
+    if lm<13:
+        return JSONResponse({"status": "partial", "confidence": 0})
+    row = []
+    for i in landmarker:
+        p = lm[i]
+        row = [p.x,p.y,p.z]
 
-            color = (0, 255, 0) if good_posture else (0, 0, 255)
-            alert.update(good_posture)
-            duration = alert.bad_duration()
-            status = "Good posture" if good_posture else f"Fix posture! ({duration}s)"
+    input_vec = np.array(row,dtype=np.float32).reshape(1,39)
+    prediction = posture_model.predict(input_vec,verbose=0)[0][0]
 
-            cv2.putText(frame, status, (20, 50),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2)
+    good_confidence = float(prediction if GOOD_CLASS_INDEX == 1 else 1 - prediction)
+    good_posture = good_confidence > 0.65
 
-        cv2.imshow("Posture Monitor", frame)
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
-
-cam.release()
-cv2.destroyAllWindows()
+    return JSONResponse({
+        "Status" : "Good" if good_posture else "bad"
+    })
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
