@@ -21,11 +21,6 @@
       font-weight: bold;
       margin-bottom: 1rem;
     }
-    #confidence {
-      font-size: 1rem;
-      color: #aaa;
-      margin-bottom: 1rem;
-    }
     video, canvas {
       border-radius: 12px;
       max-width: 640px;
@@ -47,7 +42,7 @@
         navigator.mediaDevices.getUserMedia({video:true}).then(Stream =>{
             video.srcObject = Stream;
             video.onloadedmetadata = () => {
-                canvas.widht = video.videoWidth;
+                canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
 
                 setInterval(sendFrame,500)
@@ -55,32 +50,31 @@
             };
         })
         .catch(err =>{
-            statusEl.textContext = "Camera Error: " + err.message;
+            status.textContext = "Camera Error: " + err.message;
         });
 
-        async function SendFrame() {
+        async function sendFrame() {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           canvas.toBlob(async (blob) => {
-            const formData = new formData();
+            const formData = new FormData();
             formData.append('file',blob, 'frame.jpg')
             try {
-              const response = await fetch('/predict', {
+              const response = await fetch('http://localhost:8000/predict', {
                 method : 'POST',
                 body: formData
               });
               const data = await response.json();
 
-              if(data.status == 'Good'){
-                statusEl.textContext = 'Good Posture';
-                statusEl.style.color = '#00e676';
-              } else if(data.status == 'Bad'){
-                statusEl.textContext = 'Fix your posture';
-                statusEl.style.color = '#ff1744';
+              if(data.status == 'good'){
+                status.textContent = 'Good Posture';
+                status.style.color = '#00e676';
+              } else if(data.status == 'bad'){
+                status.textContent = 'Fix your posture';
+                status.style.color = '#ff1744';
               }else{
-                statusEl.textContext = 'No person on the screen';
-                statusEl.style.color = '#aaa';
+                status.textContent = 'No person on the screen';
+                status.style.color = '#aaa';
               }
-              confEl.textContent = `Confidence: ${(data.confidence * 100).toFixed(0)}%`;
             }catch(err){
               statusE1.textContent = 'Server error';
             }
@@ -88,3 +82,4 @@
         }
     </script>
 </body>
+</html>
