@@ -52,6 +52,28 @@
         .catch(err =>{
             status.textContext = "Camera Error: " + err.message;
         });
+     
+        let lastStatus = null
+
+        function playbeep(){
+          try{
+            const audioContext = new AudioContext();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 1000;
+            gainNode.gain.value = 0.5
+            
+            oscillator.connect(gainNode)
+            gainNode.connect(audioContext.destination)
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.4)
+          } catch(e){
+            console.error('Beep Failed',e);
+          }
+        }
 
         async function sendFrame() {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -68,15 +90,19 @@
               if(data.status == 'good'){
                 status.textContent = 'Good Posture';
                 status.style.color = '#00e676';
+                lastStatus = 'good'
               } else if(data.status == 'bad'){
                 status.textContent = 'Fix your posture';
                 status.style.color = '#ff1744';
+                playbeep();
+                lastStatus = 'bad'
               }else{
                 status.textContent = 'No person on the screen';
                 status.style.color = '#aaa';
               }
             }catch(err){
-              statusE1.textContent = 'Server error';
+              console.error(err)
+              status.textContent = 'Server error';
             }
           },'image/jpeg',0.8)
         }
