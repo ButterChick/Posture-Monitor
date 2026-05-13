@@ -1,7 +1,10 @@
 import winsound
 import time
 
-for i in range(3):
-    print(f"Beep {i+1}")
-    winsound.Beep(1000, 400)
-    time.sleep(2)
+good_val = 1
+
+while good_val !=  0:
+    winsound.Beep(1000,400)
+
+    if 0xff == ord('q'):
+        break

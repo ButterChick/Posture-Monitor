@@ -22,8 +22,10 @@ class Posture_Alert:
                 self.bad_posture_start = now
             
             if not self.alert_fired:
-                winsound.Beep(self.frequency,self.duration)
+                winsound.Beep(self.frequency,self.duration)    
                 self.alert_fired = True
+
+    
     def bad_duration(self):
         if self.bad_posture_start is None:
             return 0

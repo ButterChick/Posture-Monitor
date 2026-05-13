@@ -52,7 +52,6 @@ async def predict(file: UploadFile = File(...)):
 
     mp_image = mp.Image(image_format = mp.ImageFormat.SRGB, data = frame)
     result = landmarker.detect(mp_image)
-    print(f"Landmarks found: {len(result.pose_landmarks)}")
 
     if not result.pose_landmarks:
         return JSONResponse({"status":"No person Found"})
@@ -70,7 +69,7 @@ async def predict(file: UploadFile = File(...)):
     prediction = posture_model.predict(input_vec,verbose=0)[0][0]
 
     good_confidence = float(prediction if GOOD_CLASS_INDEX == 1 else 1 - prediction)
-    good_posture = good_confidence > 0.65
+    good_posture = good_confidence < 0.65
 
     return JSONResponse({
         "status" : "good" if good_posture else "bad"
