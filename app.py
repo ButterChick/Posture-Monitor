@@ -22,7 +22,10 @@ if not os.path.exists(MODEL_PATH):
     print("Done.")
 
 
-posture_model = tf.keras.models.load_model("posture_lm.h5")
+posture_model = tf.keras.models.load_model(
+    "posture_lm.h5",
+    compile=False
+)
 
 LANDMARK_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
@@ -33,7 +36,19 @@ options = PoseLandmarkerOptions(
     running_mode = RunningMode.IMAGE,
 )
 
-landmarker = PoseLandmarker.create_from_options(options)
+try:
+    posture_model = tf.keras.models.load_model(
+        "posture_lm.h5",
+        compile=False
+    )
+    print("Posture model loaded")
+
+    landmarker = PoseLandmarker.create_from_options(options)
+    print("MediaPipe loaded")
+
+except Exception as e:
+    print("STARTUP ERROR:", e)
+    raise e
 
 app = FastAPI()
 app.add_middleware(
