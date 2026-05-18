@@ -92,7 +92,9 @@
               } else if(data.status == 'bad'){
                 status.textContent = 'Fix your posture';
                 status.style.color = '#ff1744';
-                playbeep();
+                if (lastStatus = "good"){
+                  playbeep();
+                }
                 lastStatus = 'bad'
               }else{
                 status.textContent = 'No person on the screen';
