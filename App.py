@@ -23,7 +23,15 @@ if not os.path.exists(MODEL_PATH):
     urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
     print("Done.")
 
-posture_model = tf.keras.models.load_model("posture_lm.h5")
+POSTURE_MODEL_PATH = "Posture_lm.h5"
+POSTURE_MODEL_URL = "https://huggingface.co/ButterChicken078/Posture-Monitor/resolve/main/posture_lm.h5"
+
+if not os.path.exists(POSTURE_MODEL_PATH):
+    print("Downloading model...")
+    urllib.request.urlretrieve(POSTURE_MODEL_URL, POSTURE_MODEL_PATH)
+    print("Done.")
+
+posture_model = tf.keras.models.load_model(POSTURE_MODEL_PATH)
 
 LANDMARK_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 

@@ -44,9 +44,7 @@
             video.onloadedmetadata = () => {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
-
-                setInterval(sendFrame,500)
-
+                setInterval(sendFrame,1000)
             };
         })
         .catch(err =>{
@@ -69,7 +67,7 @@
             gainNode.connect(audioContext.destination)
 
             oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.4)
+            oscillator.stop(audioContext.currentTime + 0.5)
           } catch(e){
             console.error('Beep Failed',e);
           }
