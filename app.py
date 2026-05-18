@@ -23,7 +23,7 @@ if not os.path.exists(MODEL_PATH):
 
 
 posture_model = tf.keras.models.load_model(
-    "posture_lm.h5",
+    "posture_lm.keras",
     compile=False
 )
 
@@ -38,7 +38,7 @@ options = PoseLandmarkerOptions(
 
 try:
     posture_model = tf.keras.models.load_model(
-        "posture_lm.h5",
+        "posture_lm.keras",
         compile=False
     )
     print("Posture model loaded")
