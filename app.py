@@ -16,18 +16,17 @@ import io
 MODEL_PATH = "pose_landmarker_full.task"
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task"
 
-if not os.path.exists(MODEL_PATH):
-    print("Downloading model...")
-    urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-    print("Done.")
+
+print("Downloading model...")
+urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+print("Done.")
 
 POSTURE_MODEL_PATH = "posture_lm.keras"
 POSTURE_MODEL_URL = "https://huggingface.co/ButterChicken078/Posture-Monitor/resolve/main/posture_lm.keras"
 
-if not os.path.exists(POSTURE_MODEL_PATH):
-    print("Downloading posture model...")
-    urllib.request.urlretrieve(POSTURE_MODEL_URL, POSTURE_MODEL_PATH)
-    print("Done.")
+print("Downloading posture model...")
+urllib.request.urlretrieve(POSTURE_MODEL_URL, POSTURE_MODEL_PATH)
+print("Done.")
 
 posture_model = tf.keras.models.load_model(POSTURE_MODEL_PATH, compile=False)
 
