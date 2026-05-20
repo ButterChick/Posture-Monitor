@@ -21,8 +21,7 @@ x_train, x_val, y_train, y_val = train_test_split(
 )
 
 model = models.Sequential([
-    layers.Input(shape=(39,)),
-    layers.Dense(128, activation='relu'),
+    layers.Dense(128, activation='relu',input_shape = (39,)),
     layers.Dropout(rate=0.3),
     layers.Dense(64, activation='relu'),
     layers.Dropout(rate=0.2),
