@@ -21,11 +21,15 @@ if not os.path.exists(MODEL_PATH):
     urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
     print("Done.")
 
+POSTURE_MODEL_PATH = "posture_lm.keras"
+POSTURE_MODEL_URL = "https://huggingface.co/ButterChicken078/Posture-Monitor/resolve/main/posture_lm.keras"
 
-posture_model = tf.keras.models.load_model(
-    "posture_lm.keras",
-    compile=False
-)
+if not os.path.exists(POSTURE_MODEL_PATH):
+    print("Downloading posture model...")
+    urllib.request.urlretrieve(POSTURE_MODEL_URL, POSTURE_MODEL_PATH)
+    print("Done.")
+
+posture_model = tf.keras.models.load_model(POSTURE_MODEL_PATH, compile=False)
 
 LANDMARK_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
@@ -35,20 +39,7 @@ options = PoseLandmarkerOptions(
     base_options = python.BaseOptions(model_asset_path = MODEL_PATH),
     running_mode = RunningMode.IMAGE,
 )
-
-try:
-    posture_model = tf.keras.models.load_model(
-        "posture_lm.keras",
-        compile=False
-    )
-    print("Posture model loaded")
-
-    landmarker = PoseLandmarker.create_from_options(options)
-    print("MediaPipe loaded")
-
-except Exception as e:
-    print("STARTUP ERROR:", e)
-    raise e
+landmarker = PoseLandmarker.create_from_options(options)
 
 app = FastAPI()
 app.add_middleware(
