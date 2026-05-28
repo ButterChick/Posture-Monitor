@@ -79,3 +79,6 @@ async def predict(file: UploadFile = File(...)):
         "status" : "good" if good_posture else "bad"
     })
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000)
